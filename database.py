@@ -106,6 +106,14 @@ CREATE TABLE IF NOT EXISTS paiements (
     libelle TEXT DEFAULT ''
 );
 
+CREATE TABLE IF NOT EXISTS documents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    marche_id INTEGER NOT NULL REFERENCES marches(id) ON DELETE CASCADE,
+    nom_fichier TEXT NOT NULL,
+    contenu BLOB NOT NULL,
+    date_ajout TEXT DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     identifiant TEXT NOT NULL UNIQUE,
