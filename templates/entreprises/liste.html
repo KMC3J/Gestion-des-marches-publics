@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titre %}Entreprises{% endblock %}
+{% block contenu %}
+<div class="page-head">
+  <h1>Entreprises (titulaires et sous-traitants)</h1>
+  <div class="actions">
+    <a class="btn" href="{{ url_for('entreprise_nouvelle') }}">+ Nouvelle entreprise</a>
+  </div>
+</div>
+
+<div class="section">
+  {% if entreprises %}
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Raison sociale</th><th>SIRET</th><th>Ville</th><th>Contact</th><th>Marchés</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for e in entreprises %}
+      <tr>
+        <td><strong>{{ e.raison_sociale }}</strong></td>
+        <td>{{ e.siret or '—' }}</td>
+        <td>{{ e.cp }} {{ e.ville }}</td>
+        <td>{{ e.email or '—' }}{% if e.telephone %}<br>{{ e.telephone }}{% endif %}</td>
+        <td>{{ e.nb_marches }}</td>
+        <td>
+          <a class="btn btn-secondaire btn-petit" href="{{ url_for('entreprise_modifier', entreprise_id=e.id) }}">Modifier</a>
+          <form class="inline" method="post" action="{{ url_for('entreprise_supprimer', entreprise_id=e.id) }}" onsubmit="return confirm('Supprimer cette entreprise ?')">
+            <button class="btn-suppr" type="submit">Suppr.</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="vide">Aucune entreprise enregistrée.</div>
+  {% endif %}
+</div>
+{% endblock %}
