@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titre %}Mon compte{% endblock %}
+{% block contenu %}
+<div class="page-head">
+  <h1>Mon compte</h1>
+</div>
+
+<div class="section" style="max-width: 560px;">
+  <h2>Changer mon mot de passe</h2>
+  <form method="post" class="section-body">
+    <div class="form-grille" style="grid-template-columns: 1fr;">
+      <div class="champ">
+        <label for="mot_de_passe_actuel">Mot de passe actuel</label>
+        <input id="mot_de_passe_actuel" name="mot_de_passe_actuel" type="password" required autocomplete="current-password">
+      </div>
+      <div class="champ">
+        <label for="nouveau_mot_de_passe">Nouveau mot de passe (8 caractères minimum)</label>
+        <input id="nouveau_mot_de_passe" name="nouveau_mot_de_passe" type="password" required minlength="8" autocomplete="new-password">
+      </div>
+      <div class="champ">
+        <label for="confirmation">Confirmer le nouveau mot de passe</label>
+        <input id="confirmation" name="confirmation" type="password" required minlength="8" autocomplete="new-password">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" type="submit">Modifier le mot de passe</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
