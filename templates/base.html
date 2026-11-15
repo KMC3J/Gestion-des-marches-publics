@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block titre %}Marchés publics{% endblock %} - Suivi des marchés publics</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="{{ url_for('dashboard') }}">🏛️ <span>Marchés publics</span><small>Commune</small></a>
+      <nav>
+        <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' }}">Tableau de bord</a>
+        <a href="{{ url_for('marches_liste') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('marche') or request.endpoint == 'marches_liste' }}">Marchés</a>
+        <a href="{{ url_for('entreprises_liste') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('entreprise') }}">Entreprises</a>
+        <a href="{{ url_for('export_marches') }}">Export CSV</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for categorie, message in messages %}
+          <div class="flash flash-{{ categorie }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% block contenu %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    Suivi des marchés publics — outil interne de la commune · données stockées localement (SQLite)
+  </footer>
+</body>
+</html>
