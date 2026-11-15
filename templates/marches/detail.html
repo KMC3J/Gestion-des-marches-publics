@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% from "macros.html" import badge_statut %}
+{% block titre %}Marché {{ marche.numero }}{% endblock %}
+{% block contenu %}
+<div class="marche-head">
+  <div>
+    <h1>{{ marche.numero }} — {{ marche.objet }}</h1>
+    <div class="ref">{{ marche.type_marche }} · {{ marche.procedure or 'procédure non renseignée' }} · {{ marche.service or '—' }}</div>
+  </div>
+  <div class="actions">
+    {{ badge_statut(marche.statut) }}
+    <a class="btn btn-secondaire" href="{{ url_for('marche_modifier', marche_id=marche.id) }}">Modifier</a>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Caractéristiques</h2>
+  <div class="section-body fiche">
+    <div><div class="label">Montant HT</div><div class="val">{{ marche.montant_ht|euro }} €</div></div>
+    <div><div class="label">Montant TTC ({{ marche.taux_tva }} %)</div><div class="val">{{ montant_ttc|euro }} €</div></div>
+    <div><div class="label">Forme de prix</div><div class="val">{{ marche.forme_prix }}</div></div>
+    <div><div class="label">Notification</div><div class="val">{{ marche.date_notification or '—' }}</div></div>
+    <div><div class="label">Approbation</div><div class="val">{{ marche.date_approbation or '—' }}</div></div>
+    <div><div class="label">Achèvement prévu</div><div class="val">{{ marche.date_achevement or '—' }}</div></div>
+    <div><div class="label">Durée</div><div class="val">{{ marche.duree_mois }} mois</div></div>
+    <div><div class="label">Lieu</div><div class="val">{{ marche.lieu or '—' }}</div></div>
+    <div><div class="label">Indice de référence</div><div class="val">{{ marche.indice_reference or '—' }}{% if marche.valeur_indice_notif %} ({{ marche.valeur_indice_notif }}){% endif %}</div></div>
+  </div>
+  {% if marche.notes %}<div class="vide">Notes : {{ marche.notes }}</div>{% endif %}
+</div>
+
+<div class="section">
+  <h2>Titulaires et sous-traitants</h2>
+  {% if intervenants %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Entreprise</th><th>Rôle</th><th class="montant">Montant HT</th><th>Part</th><th>Déclaration</th><th></th></tr></thead>
+    <tbody>
+      {% for iv in intervenants %}
+      <tr>
+        <td><strong>{{ iv.raison_sociale }}</strong></td>
+        <td><span class="badge {{ 'badge-vert' if iv.role == 'Titulaire' else ('badge-bleu' if iv.role == 'Co-traitant' else 'badge-jaune') }}">{{ iv.role }}</span></td>
+        <td class="montant">{{ iv.montant_ht|euro }} €</td>
+        <td>{{ iv.part_pct }} %</td>
+        <td>{{ iv.date_declaration or '—' }}</td>
+        <td>
+          <form class="inline" method="post" action="{{ url_for('intervenant_supprimer', intervenant_id=iv.id) }}" onsubmit="return confirm('Retirer cet intervenant ?')">
+            <button class="btn-suppr" type="submit">Retirer</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="vide">Aucun intervenant enregistré.</div>
+  {% endif %}
+  <div class="section-body">
+    <form method="post" action="{{ url_for('intervenant_ajouter', marche_id=marche.id) }}" class="pile">
+      <div class="champ">
+        <label>Entreprise</label>
+        <select name="entreprise_id" required>
+          {% for e in entreprises %}<option value="{{ e.id }}">{{ e.raison_sociale }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="champ">
+        <label>Rôle</label>
+        <select name="role">{% for r in roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}</select>
+      </div>
+      <div class="champ">
+        <label>Montant HT (€)</label>
+        <input type="number" name="montant_ht" step="0.01" min="0">
+      </div>
+      <div class="champ">
+        <label>Part (%)</label>
+        <input type="number" name="part_pct" step="0.01" min="0" max="100">
+      </div>
+      <div class="champ">
+        <label>Date de déclaration (sous-traitance)</label>
+        <input type="date" name="date_declaration">
+      </div>
+      <button class="btn" type="submit">Ajouter</button>
+    </form>
+  </div>
+</div>
+
+<div class="grille-2">
+  <div class="section">
+    <h2>Retenues de garantie</h2>
+    {% if retenues %}
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th class="montant">Taux</th><th class="montant">Montant</th><th>Retenue le</th><th>Restitution</th><th></th></tr></thead>
+      <tbody>
+        {% for rg in retenues %}
+        <tr>
+          <td class="montant">{{ rg.taux }} %</td>
+          <td class="montant">{{ rg.montant|euro }} €</td>
+          <td>{{ rg.date_retenue or '—' }}</td>
+          <td>
+            {% if rg.montant_restitue %}
+              <span class="badge badge-vert">Restituée {{ rg.date_restitution }}</span>
+            {% else %}
+              <form class="inline" method="post" action="{{ url_for('retenue_restituer', retenue_id=rg.id) }}">
+                <input type="date" name="date_restitution" required>
+                <button class="btn btn-secondaire btn-petit" type="submit">Restituer</button>
+              </form>
+            {% endif %}
+          </td>
+          <td>
+            <form class="inline" method="post" action="{{ url_for('retenue_supprimer', retenue_id=rg.id) }}" onsubmit="return confirm('Supprimer cette retenue ?')">
+              <button class="btn-suppr" type="submit">Suppr.</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="vide">Aucune retenue de garantie (taux habituel : 5 %).</div>
+    {% endif %}
+    <div class="section-body">
+      <form method="post" action="{{ url_for('retenue_ajouter', marche_id=marche.id) }}" class="pile">
+        <div class="champ"><label>Taux (%)</label><input type="number" name="taux" step="0.01" value="5"></div>
+        <div class="champ"><label>Montant (€)</label><input type="number" name="montant" step="0.01" required></div>
+        <div class="champ"><label>Date de retenue</label><input type="date" name="date_retenue"></div>
+        <button class="btn" type="submit">Ajouter</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Avances</h2>
+    {% if avances %}
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th class="montant">Taux</th><th class="montant">Montant</th><th>Versée le</th><th class="montant">Remboursée</th><th></th></tr></thead>
+      <tbody>
+        {% for av in avances %}
+        <tr>
+          <td class="montant">{{ av.taux }} %</td>
+          <td class="montant">{{ av.montant|euro }} €</td>
+          <td>{{ av.date_versement or '—' }}{% if av.nb_echeances %} ({{ av.nb_echeances }} échéances){% endif %}</td>
+          <td class="montant">{{ av.montant_rembourse|euro }} €</td>
+          <td>
+            <form class="inline" method="post" action="{{ url_for('avance_supprimer', avance_id=av.id) }}" onsubmit="return confirm('Supprimer cette avance ?')">
+              <button class="btn-suppr" type="submit">Suppr.</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="vide">Aucune avance enregistrée.</div>
+    {% endif %}
+    <div class="section-body">
+      <form method="post" action="{{ url_for('avance_ajouter', marche_id=marche.id) }}" class="pile">
+        <div class="champ"><label>Taux (%)</label><input type="number" name="taux" step="0.01" value="10"></div>
+        <div class="champ"><label>Montant (€)</label><input type="number" name="montant" step="0.01" required></div>
+        <div class="champ"><label>Date de versement</label><input type="date" name="date_versement"></div>
+        <div class="champ"><label>Nb échéances</label><input type="number" name="nb_echeances" min="0"></div>
+        <div class="champ"><label>Remboursé (€)</label><input type="number" name="montant_rembourse" step="0.01" value="0"></div>
+        <button class="btn" type="submit">Ajouter</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Révisions de prix</h2>
+  {% if revisions %}
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Indice</th><th class="montant">Indice réf.</th><th>Réf. le</th><th class="montant">Indice période</th><th>Période le</th><th class="montant">HT révisable</th><th class="montant">Variation</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for rv in revisions %}
+      <tr>
+        <td>{{ rv.indice or '—' }}</td>
+        <td class="montant">{{ rv.valeur_indice_reference }}</td>
+        <td>{{ rv.date_reference or '—' }}</td>
+        <td class="montant">{{ rv.valeur_indice_periode }}</td>
+        <td>{{ rv.date_periode or '—' }}</td>
+        <td class="montant">{{ rv.montant_ht_revisable|euro }} €</td>
+        <td class="montant"><strong>{{ '+' if rv.montant_revision >= 0 else '' }}{{ rv.montant_revision|euro }} €</strong></td>
+        <td>
+          <form class="inline" method="post" action="{{ url_for('revision_supprimer', revision_id=rv.id) }}" onsubmit="return confirm('Supprimer cette révision ?')">
+            <button class="btn-suppr" type="submit">Suppr.</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="vide">Aucune révision de prix enregistrée.</div>
+  {% endif %}
+  <div class="section-body">
+    <form method="post" action="{{ url_for('revision_ajouter', marche_id=marche.id) }}" class="pile">
+      <div class="champ"><label>Indice</label><input type="text" name="indice" value="{{ marche.indice_reference }}" placeholder="TP-BTP (2015)…"></div>
+      <div class="champ"><label>Valeur indice référence</label><input type="number" name="valeur_indice_reference" step="0.01" required></div>
+      <div class="champ"><label>Date référence</label><input type="date" name="date_reference"></div>
+      <div class="champ"><label>Valeur indice période</label><input type="number" name="valeur_indice_periode" step="0.01" required></div>
+      <div class="champ"><label>Date période</label><input type="date" name="date_periode"></div>
+      <div class="champ"><label>Montant HT révisable (€)</label><input type="number" name="montant_ht_revisable" step="0.01" required></div>
+      <button class="btn" type="submit">Calculer et ajouter</button>
+    </form>
+  </div>
+</div>
+
+<div class="grille-2">
+  <div class="section">
+    <h2>Paiements</h2>
+    {% if paiements %}
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Libellé</th><th class="montant">Montant HT</th><th></th></tr></thead>
+      <tbody>
+        {% for p in paiements %}
+        <tr>
+          <td>{{ p.date_paiement or '—' }}</td>
+          <td>{{ p.libelle or '—' }}</td>
+          <td class="montant">{{ p.montant_ht|euro }} €</td>
+          <td>
+            <form class="inline" method="post" action="{{ url_for('paiement_supprimer', paiement_id=p.id) }}" onsubmit="return confirm('Supprimer ce paiement ?')">
+              <button class="btn-suppr" type="submit">Suppr.</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="vide">Aucun paiement enregistré.</div>
+    {% endif %}
+    <div class="section-body">
+      <form method="post" action="{{ url_for('paiement_ajouter', marche_id=marche.id) }}" class="pile">
+        <div class="champ"><label>Date</label><input type="date" name="date_paiement"></div>
+        <div class="champ"><label>Libellé</label><input type="text" name="libelle" placeholder="Situation n°1…"></div>
+        <div class="champ"><label>Montant HT (€)</label><input type="number" name="montant_ht" step="0.01" required></div>
+        <button class="btn" type="submit">Ajouter</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Reconductions</h2>
+    {% if reconductions %}
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Numéro</th><th>Début</th><th>Fin</th><th class="montant">Montant HT</th><th>Statut</th><th></th></tr></thead>
+      <tbody>
+        {% for rc in reconductions %}
+        <tr>
+          <td><strong>{{ rc.numero or '—' }}</strong></td>
+          <td>{{ rc.date_debut or '—' }}</td>
+          <td>{{ rc.date_fin or '—' }}</td>
+          <td class="montant">{{ rc.montant_ht|euro }} €</td>
+          <td>{{ badge_statut(rc.statut) }}</td>
+          <td>
+            <form class="inline" method="post" action="{{ url_for('reconduction_supprimer', reconduction_id=rc.id) }}" onsubmit="return confirm('Supprimer cette reconduction ?')">
+              <button class="btn-suppr" type="submit">Suppr.</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% if reconductions[0].notes %}<div class="vide">Notes : {{ reconductions[0].notes }}</div>{% endif %}
+    {% else %}
+    <div class="vide">Aucune reconduction enregistrée.</div>
+    {% endif %}
+    <div class="section-body">
+      <form method="post" action="{{ url_for('reconduction_ajouter', marche_id=marche.id) }}" class="pile">
+        <div class="champ"><label>Numéro</label><input type="text" name="numero" placeholder="{{ marche.numero }}-R1"></div>
+        <div class="champ"><label>Début</label><input type="date" name="date_debut"></div>
+        <div class="champ"><label>Fin</label><input type="date" name="date_fin"></div>
+        <div class="champ"><label>Montant HT (€)</label><input type="number" name="montant_ht" step="0.01"></div>
+        <div class="champ">
+          <label>Statut</label>
+          <select name="statut">{% for s in ['En préparation', 'En cours', 'Soldé', 'Résilié'] %}<option>{{ s }}</option>{% endfor %}</select>
+        </div>
+        <button class="btn" type="submit">Ajouter</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="totaux">
+  <span>Total payé : <strong>{{ total_paye|euro }} € HT</strong></span>
+  <span>Total révisions de prix : <strong>{{ total_revise|euro }} € HT</strong></span>
+  <span>Reste à payer (hors révisions) : <strong>{{ (marche.montant_ht - total_paye)|euro }} € HT</strong></span>
+</div>
+
+<div class="section" style="margin-top: 22px;">
+  <details class="details-toggle">
+    <summary>Supprimer définitivement ce marché</summary>
+    <form method="post" action="{{ url_for('marche_supprimer', marche_id=marche.id) }}" onsubmit="return confirm('Supprimer définitivement ce marché et toutes ses données ?')" style="padding: 0 18px 14px;">
+      <button class="btn btn-danger" type="submit">Supprimer le marché {{ marche.numero }}</button>
+    </form>
+  </details>
+</div>
+{% endblock %}

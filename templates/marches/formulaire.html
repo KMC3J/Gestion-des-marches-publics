@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block titre %}{{ 'Modifier' if marche else 'Nouveau' }} marché{% endblock %}
+{% block contenu %}
+<div class="page-head">
+  <h1>{{ 'Modifier le marché ' + marche.numero if marche else 'Nouveau marché' }}</h1>
+</div>
+
+<div class="section">
+  <form method="post" class="section-body">
+    <div class="form-grille">
+      <div class="champ">
+        <label for="numero">Numéro du marché *</label>
+        <input id="numero" name="numero" required value="{{ marche.numero if marche else '' }}" placeholder="2025-001">
+      </div>
+      <div class="champ" style="grid-column: span 2;">
+        <label for="objet">Objet *</label>
+        <input id="objet" name="objet" required value="{{ marche.objet if marche else '' }}">
+      </div>
+      <div class="champ">
+        <label for="type_marche">Type de marché *</label>
+        <select id="type_marche" name="type_marche" required>
+          {% for t in types %}
+          <option value="{{ t }}" {{ 'selected' if marche and marche.type_marche == t }}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="champ">
+        <label for="procedure">Procédure</label>
+        <select id="procedure" name="procedure">
+          <option value="">—</option>
+          {% for p in procedures %}
+          <option value="{{ p }}" {{ 'selected' if marche and marche.procedure == p }}>{{ p }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="champ">
+        <label for="forme_prix">Forme de prix</label>
+        <select id="forme_prix" name="forme_prix">
+          {% for fp in formes_prix %}
+          <option value="{{ fp }}" {{ 'selected' if marche and marche.forme_prix == fp }}>{{ fp }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="champ">
+        <label for="statut">Statut</label>
+        <select id="statut" name="statut">
+          {% for s in statuts %}
+          <option value="{{ s }}" {{ 'selected' if marche and marche.statut == s }}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="champ">
+        <label for="montant_ht">Montant HT (€) *</label>
+        <input id="montant_ht" name="montant_ht" type="number" step="0.01" min="0" required value="{{ marche.montant_ht if marche else '' }}">
+      </div>
+      <div class="champ">
+        <label for="taux_tva">Taux de TVA (%)</label>
+        <input id="taux_tva" name="taux_tva" type="number" step="0.1" min="0" value="{{ marche.taux_tva if marche else 20 }}">
+      </div>
+      <div class="champ">
+        <label for="date_notification">Date de notification</label>
+        <input id="date_notification" name="date_notification" type="date" value="{{ marche.date_notification if marche else '' }}">
+      </div>
+      <div class="champ">
+        <label for="date_approbation">Date d'approbation</label>
+        <input id="date_approbation" name="date_approbation" type="date" value="{{ marche.date_approbation if marche else '' }}">
+      </div>
+      <div class="champ">
+        <label for="date_achevement">Date d'achèvement prévue</label>
+        <input id="date_achevement" name="date_achevement" type="date" value="{{ marche.date_achevement if marche else '' }}">
+      </div>
+      <div class="champ">
+        <label for="duree_mois">Durée (mois)</label>
+        <input id="duree_mois" name="duree_mois" type="number" min="0" value="{{ marche.duree_mois if marche else '' }}">
+      </div>
+      <div class="champ">
+        <label for="service">Service</label>
+        <input id="service" name="service" value="{{ marche.service if marche else '' }}" placeholder="Services techniques…">
+      </div>
+      <div class="champ">
+        <label for="lieu">Lieu d'exécution</label>
+        <input id="lieu" name="lieu" value="{{ marche.lieu if marche else '' }}">
+      </div>
+      <div class="champ">
+        <label for="indice_reference">Indice de révision (référence)</label>
+        <input id="indice_reference" name="indice_reference" value="{{ marche.indice_reference if marche else '' }}" placeholder="TP-BTP (2015)…">
+      </div>
+      <div class="champ">
+        <label for="valeur_indice_notif">Valeur de l'indice à la notification</label>
+        <input id="valeur_indice_notif" name="valeur_indice_notif" type="number" step="0.01" value="{{ marche.valeur_indice_notif if marche and marche.valeur_indice_notif else '' }}">
+      </div>
+      <div class="champ" style="grid-column: 1 / -1;">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes">{{ marche.notes if marche else '' }}</textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" type="submit">{{ 'Enregistrer les modifications' if marche else 'Créer le marché' }}</button>
+      <a class="btn btn-secondaire" href="{{ url_for('marche_detail', marche_id=marche.id) if marche else url_for('marches_liste') }}">Annuler</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

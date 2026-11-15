@@ -1,0 +1,11 @@
+{% macro badge_statut(statut) -%}
+  {% set couleurs = {
+    'En préparation': 'badge-jaune',
+    'En cours': 'badge-bleu',
+    'Réception provisoire': 'badge-gris',
+    'Réception définitive': 'badge-gris',
+    'Soldé': 'badge-vert',
+    'Résilié': 'badge-rouge'
+  } %}
+  <span class="badge {{ couleurs.get(statut, 'badge-gris') }}">{{ statut }}</span>
+{%- endmacro %}

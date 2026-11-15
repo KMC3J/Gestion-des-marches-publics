@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block titre %}Tableau de bord{% endblock %}
+{% block contenu %}
+<div class="page-head">
+  <h1>Tableau de bord</h1>
+  <div class="actions">
+    <a class="btn" href="{{ url_for('marche_nouveau') }}">+ Nouveau marché</a>
+  </div>
+</div>
+
+<div class="cards">
+  <div class="card"><div class="label">Marchés enregistrés</div><div class="valeur">{{ stats.nb_marches }}</div></div>
+  <div class="card"><div class="label">Marchés en cours</div><div class="valeur">{{ stats.nb_en_cours }}</div></div>
+  <div class="card"><div class="label">Montant engagé (HT)</div><div class="valeur">{{ stats.montant_engage|euro }} €</div></div>
+  <div class="card"><div class="label">Paie cumulée (HT)</div><div class="valeur">{{ stats.montant_paye|euro }} €</div></div>
+  <div class="card"><div class="label">Retenues de garantie en cours</div><div class="valeur petit">{{ stats.retenues_en_cours|euro }} €</div></div>
+  <div class="card"><div class="label">Avances à rembourser</div><div class="valeur petit">{{ stats.avances_en_cours|euro }} €</div></div>
+</div>
+
+<div class="section">
+  <h2>Derniers marchés notifiés <a class="btn btn-secondaire btn-petit" href="{{ url_for('marches_liste') }}">Tout voir</a></h2>
+  {% if marches_recents %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Numéro</th><th>Objet</th><th>Type</th><th class="montant">Montant HT</th><th>Statut</th></tr></thead>
+    <tbody>
+      {% for m in marches_recents %}
+      <tr>
+        <td><a href="{{ url_for('marche_detail', marche_id=m.id) }}"><strong>{{ m.numero }}</strong></a></td>
+        <td>{{ m.objet }}</td>
+        <td><span class="badge badge-bleu">{{ m.type_marche }}</span></td>
+        <td class="montant">{{ m.montant_ht|euro }} €</td>
+        <td>{% from "macros.html" import badge_statut %}{{ badge_statut(m.statut) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="vide">Aucun marché enregistré. <a href="{{ url_for('marche_nouveau') }}">Créer le premier marché</a>.</div>
+  {% endif %}
+</div>
+
+<div class="section">
+  <h2>Échéances proches (marchés en cours)</h2>
+  {% set echeances_liste = echeances %}
+  {% if echeances_liste %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Numéro</th><th>Objet</th><th>Date d'achèvement</th><th>Durée</th></tr></thead>
+    <tbody>
+      {% for m in echeances_liste %}
+      <tr>
+        <td><a href="{{ url_for('marche_detail', marche_id=m.id) }}"><strong>{{ m.numero }}</strong></a></td>
+        <td>{{ m.objet }}</td>
+        <td>{{ m.date_achevement }}</td>
+        <td>{{ m.duree_mois }} mois</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="vide">Aucune échéance à venir sur les marchés en cours.</div>
+  {% endif %}
+</div>
+{% endblock %}
