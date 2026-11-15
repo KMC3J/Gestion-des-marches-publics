@@ -5,7 +5,12 @@ Lancement :
     python database.py --seed   (facultatif : données d'exemple)
     python app.py
 """
-from flask import Flask, flash, redirect, render_template, request, url_for
+import sqlite3
+
+from functools import wraps
+
+from flask import Flask, flash, redirect, render_template, request, session, url_for
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from database import (
     FORMES_PRIX,
@@ -19,6 +24,29 @@ from database import (
 
 app = Flask(__name__)
 app.secret_key = "changez-cette-cle-en-production"
+
+
+@app.before_request
+def exiger_connexion():
+    if request.endpoint in (None, "static", "connexion"):
+        return None
+    if not session.get("user_id"):
+        return redirect(url_for("connexion"))
+    return None
+
+
+def est_admin():
+    return session.get("role") == "admin"
+
+
+def admin_requis(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not est_admin():
+            flash("Action réservée aux administrateurs.", "error")
+            return redirect(url_for("dashboard"))
+        return f(*args, **kwargs)
+    return wrapper
 
 
 def f(val, default=0.0):
@@ -40,6 +68,58 @@ def euro(val):
 
 
 app.jinja_env.filters["euro"] = euro
+
+
+@app.route("/connexion", methods=["GET", "POST"])
+def connexion():
+    if request.method == "POST":
+        db = get_db()
+        user = db.execute(
+            "SELECT * FROM users WHERE identifiant = ?", (request.form.get("identifiant", "").strip(),)
+        ).fetchone()
+        db.close()
+        if user and check_password_hash(user["mot_de_passe"], request.form.get("mot_de_passe", "")):
+            session["user_id"] = user["id"]
+            session["identifiant"] = user["identifiant"]
+            session["nom"] = user["nom"]
+            session["role"] = user["role"]
+            return redirect(url_for("dashboard"))
+        flash("Identifiant ou mot de passe incorrect.", "error")
+    return render_template("login.html")
+
+
+@app.route("/deconnexion")
+def deconnexion():
+    session.clear()
+    return redirect(url_for("connexion"))
+
+
+@app.route("/mon-compte", methods=["GET", "POST"])
+def mon_compte():
+    if request.method == "POST":
+        actuel = request.form.get("mot_de_passe_actuel", "")
+        nouveau = request.form.get("nouveau_mot_de_passe", "")
+        confirmation = request.form.get("confirmation", "")
+        if nouveau != confirmation:
+            flash("La confirmation ne correspond pas au nouveau mot de passe.", "error")
+        elif len(nouveau) < 8:
+            flash("Le nouveau mot de passe doit contenir au moins 8 caractères.", "error")
+        else:
+            db = get_db()
+            user = db.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],)).fetchone()
+            if not check_password_hash(user["mot_de_passe"], actuel):
+                db.close()
+                flash("Mot de passe actuel incorrect.", "error")
+            else:
+                db.execute(
+                    "UPDATE users SET mot_de_passe = ? WHERE id = ?",
+                    (generate_password_hash(nouveau), session["user_id"]),
+                )
+                db.commit()
+                db.close()
+                flash("Mot de passe modifié avec succès.", "success")
+                return redirect(url_for("dashboard"))
+    return render_template("mon-compte.html")
 
 
 @app.route("/")
@@ -212,6 +292,7 @@ def marche_modifier(marche_id):
 
 
 @app.route("/marches/<int:marche_id>/supprimer", methods=["POST"])
+@admin_requis
 def marche_supprimer(marche_id):
     conn = get_db()
     conn.execute("DELETE FROM marches WHERE id = ?", (marche_id,))
@@ -245,6 +326,7 @@ def intervenant_ajouter(marche_id):
 
 
 @app.route("/intervenants/<int:intervenant_id>/supprimer", methods=["POST"])
+@admin_requis
 def intervenant_supprimer(intervenant_id):
     conn = get_db()
     row = conn.execute("SELECT marche_id FROM intervenants WHERE id = ?", (intervenant_id,)).fetchone()
@@ -303,6 +385,7 @@ def entreprise_modifier(entreprise_id):
 
 
 @app.route("/entreprises/<int:entreprise_id>/supprimer", methods=["POST"])
+@admin_requis
 def entreprise_supprimer(entreprise_id):
     conn = get_db()
     nb = conn.execute("SELECT COUNT(*) FROM intervenants WHERE entreprise_id = ?", (entreprise_id,)).fetchone()[0]
@@ -350,6 +433,7 @@ def retenue_restituer(retenue_id):
 
 
 @app.route("/retenues/<int:retenue_id>/supprimer", methods=["POST"])
+@admin_requis
 def retenue_supprimer(retenue_id):
     conn = get_db()
     row = conn.execute("SELECT marche_id FROM retenues_garantie WHERE id = ?", (retenue_id,)).fetchone()
@@ -379,6 +463,7 @@ def avance_ajouter(marche_id):
 
 
 @app.route("/avances/<int:avance_id>/supprimer", methods=["POST"])
+@admin_requis
 def avance_supprimer(avance_id):
     conn = get_db()
     row = conn.execute("SELECT marche_id FROM avances WHERE id = ?", (avance_id,)).fetchone()
@@ -412,6 +497,7 @@ def revision_ajouter(marche_id):
 
 
 @app.route("/revisions/<int:revision_id>/supprimer", methods=["POST"])
+@admin_requis
 def revision_supprimer(revision_id):
     conn = get_db()
     row = conn.execute("SELECT marche_id FROM revisions_prix WHERE id = ?", (revision_id,)).fetchone()
@@ -441,6 +527,7 @@ def paiement_ajouter(marche_id):
 
 
 @app.route("/paiements/<int:paiement_id>/supprimer", methods=["POST"])
+@admin_requis
 def paiement_supprimer(paiement_id):
     conn = get_db()
     row = conn.execute("SELECT marche_id FROM paiements WHERE id = ?", (paiement_id,)).fetchone()
@@ -470,6 +557,7 @@ def reconduction_ajouter(marche_id):
 
 
 @app.route("/reconductions/<int:reconduction_id>/supprimer", methods=["POST"])
+@admin_requis
 def reconduction_supprimer(reconduction_id):
     conn = get_db()
     row = conn.execute("SELECT marche_origine_id FROM reconductions WHERE id = ?", (reconduction_id,)).fetchone()
@@ -480,6 +568,92 @@ def reconduction_supprimer(reconduction_id):
     if row:
         return redirect(url_for("marche_detail", marche_id=row["marche_id"]))
     return redirect(url_for("marches_liste"))
+
+
+# ---------------------------------------------------------------- Utilisateurs (administration)
+
+
+@app.route("/utilisateurs")
+@admin_requis
+def utilisateurs_liste():
+    db = get_db()
+    users = db.execute("SELECT * FROM users ORDER BY identifiant").fetchall()
+    db.close()
+    return render_template("utilisateurs/liste.html", users=users)
+
+
+@app.route("/utilisateurs/nouveau", methods=["GET", "POST"])
+@admin_requis
+def utilisateur_nouveau():
+    if request.method == "POST":
+        identifiant = request.form.get("identifiant", "").strip()
+        mot_de_passe = request.form.get("mot_de_passe", "")
+        if not identifiant or len(mot_de_passe) < 8:
+            flash("Identifiant requis et mot de passe de 8 caractères minimum.", "error")
+            return render_template("utilisateurs/formulaire.html", user=None)
+        conn = get_db()
+        try:
+            conn.execute(
+                "INSERT INTO users (identifiant, nom, mot_de_passe, role) VALUES (?,?,?,?)",
+                (identifiant, request.form.get("nom", "").strip(), generate_password_hash(mot_de_passe), request.form.get("role", "agent")),
+            )
+            conn.commit()
+        except sqlite3.IntegrityError:
+            conn.close()
+            flash("Cet identifiant existe déjà.", "error")
+            return render_template("utilisateurs/formulaire.html", user=None)
+        conn.close()
+        flash("Utilisateur créé.", "success")
+        return redirect(url_for("utilisateurs_liste"))
+    return render_template("utilisateurs/formulaire.html", user=None)
+
+
+@app.route("/utilisateurs/<int:user_id>/modifier", methods=["GET", "POST"])
+@admin_requis
+def utilisateur_modifier(user_id):
+    db = get_db()
+    if request.method == "POST":
+        mot_de_passe = request.form.get("mot_de_passe", "")
+        db.execute(
+            "UPDATE users SET nom = ?, role = ? WHERE id = ?",
+            (request.form.get("nom", "").strip(), request.form.get("role", "agent"), user_id),
+        )
+        if mot_de_passe:
+            if len(mot_de_passe) < 8:
+                db.close()
+                flash("Le mot de passe doit contenir au moins 8 caractères.", "error")
+                return redirect(url_for("utilisateur_modifier", user_id=user_id))
+            db.execute("UPDATE users SET mot_de_passe = ? WHERE id = ?", (generate_password_hash(mot_de_passe), user_id))
+        db.commit()
+        db.close()
+        flash("Utilisateur mis à jour.", "success")
+        return redirect(url_for("utilisateurs_liste"))
+    user = db.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    db.close()
+    if not user:
+        flash("Utilisateur introuvable.", "error")
+        return redirect(url_for("utilisateurs_liste"))
+    return render_template("utilisateurs/formulaire.html", user=user)
+
+
+@app.route("/utilisateurs/<int:user_id>/supprimer", methods=["POST"])
+@admin_requis
+def utilisateur_supprimer(user_id):
+    if user_id == session.get("user_id"):
+        flash("Impossible de supprimer votre propre compte.", "error")
+        return redirect(url_for("utilisateurs_liste"))
+    conn = get_db()
+    user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    nb_admins = conn.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'").fetchone()[0]
+    if user and user["role"] == "admin" and nb_admins <= 1:
+        conn.close()
+        flash("Impossible de supprimer le dernier administrateur.", "error")
+        return redirect(url_for("utilisateurs_liste"))
+    conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+    flash("Utilisateur supprimé.", "success")
+    return redirect(url_for("utilisateurs_liste"))
 
 
 # ---------------------------------------------------------------- Export CSV
