@@ -2,6 +2,8 @@
 import os
 import sqlite3
 
+from werkzeug.security import generate_password_hash
+
 DB_PATH = os.environ.get("MP_DB_PATH", os.path.join(os.path.dirname(__file__), "marches.db"))
 
 TYPES_MARCHE = ["Travaux", "Fournitures", "Services"]
@@ -104,6 +106,15 @@ CREATE TABLE IF NOT EXISTS paiements (
     libelle TEXT DEFAULT ''
 );
 
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    identifiant TEXT NOT NULL UNIQUE,
+    nom TEXT NOT NULL,
+    mot_de_passe TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'agent',
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS reconductions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     marche_origine_id INTEGER NOT NULL REFERENCES marches(id) ON DELETE CASCADE,
@@ -127,6 +138,11 @@ def get_db():
 def init_db(seed=False):
     conn = get_db()
     conn.executescript(SCHEMA)
+    if not conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]:
+        conn.execute(
+            "INSERT INTO users (identifiant, nom, mot_de_passe, role) VALUES (?, ?, ?, 'admin')",
+            ("admin", "Administrateur", generate_password_hash("mairie2025")),
+        )
     if seed:
         _seed(conn)
     conn.commit()
