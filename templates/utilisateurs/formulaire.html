@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block titre %}{{ 'Modifier' if user else 'Nouvel' }} utilisateur{% endblock %}
+{% block contenu %}
+<div class="page-head">
+  <h1>{{ 'Modifier ' + user.identifiant if user else 'Nouvel utilisateur' }}</h1>
+</div>
+
+<div class="section" style="max-width: 560px;">
+  <form method="post" class="section-body">
+    <div class="form-grille" style="grid-template-columns: 1fr;">
+      {% if user %}
+      <div class="champ">
+        <label>Identifiant</label>
+        <input value="{{ user.identifiant }}" disabled>
+      </div>
+      {% else %}
+      <div class="champ">
+        <label for="identifiant">Identifiant *</label>
+        <input id="identifiant" name="identifiant" required autocomplete="username">
+      </div>
+      <div class="champ">
+        <label for="mot_de_passe">Mot de passe initial * (8 caractères minimum)</label>
+        <input id="mot_de_passe" name="mot_de_passe" type="password" required minlength="8" autocomplete="new-password">
+      </div>
+      {% endif %}
+      <div class="champ">
+        <label for="nom">Nom</label>
+        <input id="nom" name="nom" value="{{ user.nom if user else '' }}">
+      </div>
+      <div class="champ">
+        <label for="role">Rôle</label>
+        <select id="role" name="role">
+          <option value="agent" {{ 'selected' if user and user.role == 'agent' }}>Agent (saisie, sans suppression)</option>
+          <option value="admin" {{ 'selected' if user and user.role == 'admin' }}>Administrateur (tous les droits)</option>
+        </select>
+      </div>
+      {% if user %}
+      <div class="champ">
+        <label for="mot_de_passe">Nouveau mot de passe (laisser vide pour ne pas changer)</label>
+        <input id="mot_de_passe" name="mot_de_passe" type="password" minlength="8" autocomplete="new-password">
+      </div>
+      {% endif %}
+    </div>
+    <div class="form-actions">
+      <button class="btn" type="submit">{{ 'Enregistrer' if user else 'Créer l\'utilisateur' }}</button>
+      <a class="btn btn-secondaire" href="{{ url_for('utilisateurs_liste') }}">Annuler</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
