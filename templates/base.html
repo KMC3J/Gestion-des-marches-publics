@@ -14,8 +14,16 @@
         <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' }}">Tableau de bord</a>
         <a href="{{ url_for('marches_liste') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('marche') or request.endpoint == 'marches_liste' }}">Marchés</a>
         <a href="{{ url_for('entreprises_liste') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('entreprise') }}">Entreprises</a>
+        {% if session.get('role') == 'admin' %}
+        <a href="{{ url_for('utilisateurs_liste') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('utilisateur') }}">Utilisateurs</a>
+        {% endif %}
         <a href="{{ url_for('export_marches') }}">Export CSV</a>
       </nav>
+      <div class="user-zone">
+        <span class="user-nom">{{ session.get('nom') or session.get('identifiant') }} · {{ 'admin' if session.get('role') == 'admin' else 'agent' }}</span>
+        <a href="{{ url_for('mon_compte') }}">Mon compte</a>
+        <a href="{{ url_for('deconnexion') }}">Déconnexion</a>
+      </div>
     </div>
   </header>
 
