@@ -121,3 +121,17 @@ form.pile .champ { flex: 1; min-width: 130px; }
 
 .vide { color: var(--gris); font-style: italic; padding: 14px 18px; font-size: .88rem; }
 .details-toggle summary { cursor: pointer; font-size: .85rem; color: var(--bleu); padding: 0 18px 12px; }
+
+.user-zone { display: flex; align-items: center; gap: 12px; font-size: .85rem; }
+.user-zone .user-nom { color: #dbe6f3; }
+.user-zone a { color: #fff; text-decoration: underline; }
+.user-zone a:hover { color: #dbe6f3; }
+
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--fond); padding: 20px; }
+.login-card {
+  background: #fff; border: 1px solid var(--bord); border-radius: 12px;
+  padding: 32px; width: 100%; max-width: 380px; box-shadow: 0 4px 16px rgba(18, 51, 92, .08);
+}
+.login-titre { font-size: 1.3rem; font-weight: 700; color: var(--bleu-fonce); text-align: center; }
+.login-soustitre { color: var(--gris); font-size: .85rem; text-align: center; margin: 6px 0 18px; }
+.login-card .champ { margin-bottom: 12px; }
