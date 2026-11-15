@@ -12,6 +12,7 @@ Application web interne pour une commune (~8 500 habitants) : suivi complet des 
 - **Avances** : taux, montant, date de versement, nombre d'échéances, remboursement suivi.
 - **Paiements** : situations et décomptes, cumul et reste à payer par marché.
 - **Reconductions** : reconductions d'un marché (numéro, période, montant, statut).
+- **Authentification** : comptes utilisateurs avec rôles (administrateur / agent), mots de passe hachés, changement de mot de passe personnel.
 - **Export CSV** de la liste des marchés (compatible tableur).
 
 ## Démarrage
@@ -23,6 +24,8 @@ python app.py
 ```
 
 Puis ouvrir http://127.0.0.1:5000 dans le navigateur.
+
+**Première connexion** : identifiant `admin`, mot de passe `mairie2025`. Changez immédiatement ce mot de passe via « Mon compte », puis créez les comptes des agents (menu « Utilisateurs », réservé aux administrateurs).
 
 La base de données SQLite (`marches.db`) est créée automatiquement au premier lancement. Pour la placer ailleurs (sauvegarde réseau, dossier partagé) :
 
@@ -40,24 +43,30 @@ app.run(host="0.0.0.0", port=5000)
 
 et accéder via `http://<adresse-du-poste>:5000`. Prévoir une sauvegarde régulière du fichier `marches.db` (simple copie du fichier). Changer la `secret_key` dans `app.py`.
 
+## Rôles
+
+| Rôle | Droits |
+|---|---|
+| **Agent** | Consulter, créer et modifier marchés, entreprises, retenues, avances, révisions, paiements, reconductions |
+| **Administrateur** | Tous les droits + suppressions + gestion des comptes utilisateurs |
+
 ## Évolutions prévues (développement progressif)
 
 L'architecture est modulaire pour grandir au fil des besoins :
 
-1. **Authentification** (comptes agents, rôles : saisie / validation).
-2. **Lots et tranches** par marché, actes d'engagement.
-3. **Échéancier d'avance** détaillé avec rappels.
-4. **Alertes automatiques** : fins de marché, restitutions de retenues à relancer.
-5. **Statistiques annuelles** (répartition par type, carte des fournisseurs locaux).
-6. **Import DEPP / extraction BOAMP**, journal des modifications.
-7. **Hébergement sur le serveur de la commune** avec sauvegardes planifiées.
+1. **Lots et tranches** par marché, actes d'engagement.
+2. **Échéancier d'avance** détaillé avec rappels.
+3. **Alertes automatiques** : fins de marché, restitutions de retenues à relancer.
+4. **Statistiques annuelles** (répartition par type, carte des fournisseurs locaux).
+5. **Import DEPP / extraction BOAMP**, journal des modifications.
+6. **Hébergement sur le serveur de la commune** avec sauvegardes planifiées.
 
 ## Structure du code
 
 ```
 app.py               # routes Flask (une section par module métier)
 database.py          # schéma SQLite + données d'exemple
-templates/           # pages HTML (base, tableau de bord, marchés, entreprises)
+templates/           # pages HTML (base, connexion, tableau de bord, marchés, entreprises, utilisateurs)
 static/style.css     # feuille de style (sans dépendance externe)
 ```
 
