@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block titre %}{{ 'Modifier' if entreprise else 'Nouvelle' }} entreprise{% endblock %}
+{% block contenu %}
+<div class="page-head">
+  <h1>{{ 'Modifier ' + entreprise.raison_sociale if entreprise else 'Nouvelle entreprise' }}</h1>
+</div>
+
+<div class="section">
+  <form method="post" class="section-body">
+    <div class="form-grille">
+      <div class="champ" style="grid-column: span 2;">
+        <label for="raison_sociale">Raison sociale *</label>
+        <input id="raison_sociale" name="raison_sociale" required value="{{ entreprise.raison_sociale if entreprise else '' }}">
+      </div>
+      <div class="champ">
+        <label for="siret">SIRET</label>
+        <input id="siret" name="siret" value="{{ entreprise.siret if entreprise else '' }}" placeholder="14 chiffres">
+      </div>
+      <div class="champ" style="grid-column: span 2;">
+        <label for="adresse">Adresse</label>
+        <input id="adresse" name="adresse" value="{{ entreprise.adresse if entreprise else '' }}">
+      </div>
+      <div class="champ">
+        <label for="cp">Code postal</label>
+        <input id="cp" name="cp" value="{{ entreprise.cp if entreprise else '' }}">
+      </div>
+      <div class="champ">
+        <label for="ville">Ville</label>
+        <input id="ville" name="ville" value="{{ entreprise.ville if entreprise else '' }}">
+      </div>
+      <div class="champ">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" value="{{ entreprise.email if entreprise else '' }}">
+      </div>
+      <div class="champ">
+        <label for="telephone">Téléphone</label>
+        <input id="telephone" name="telephone" value="{{ entreprise.telephone if entreprise else '' }}">
+      </div>
+      <div class="champ" style="grid-column: 1 / -1;">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes">{{ entreprise.notes if entreprise else '' }}</textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" type="submit">{{ 'Enregistrer' if entreprise else 'Créer l\'entreprise' }}</button>
+      <a class="btn btn-secondaire" href="{{ url_for('entreprises_liste') }}">Annuler</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
