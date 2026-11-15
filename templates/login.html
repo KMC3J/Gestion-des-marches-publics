@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion - Suivi des marchés publics</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="login-wrap">
+    <div class="login-card">
+      <div class="login-titre">🏛️ Marchés publics</div>
+      <p class="login-soustitre">Outil interne de la commune — connexion requise</p>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for categorie, message in messages %}
+          <div class="flash flash-{{ categorie }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+      <form method="post">
+        <div class="champ">
+          <label for="identifiant">Identifiant</label>
+          <input id="identifiant" name="identifiant" required autofocus autocomplete="username">
+        </div>
+        <div class="champ">
+          <label for="mot_de_passe">Mot de passe</label>
+          <input id="mot_de_passe" name="mot_de_passe" type="password" required autocomplete="current-password">
+        </div>
+        <button class="btn" type="submit" style="width: 100%; margin-top: 14px;">Se connecter</button>
+      </form>
+    </div>
+  </main>
+</body>
+</html>
