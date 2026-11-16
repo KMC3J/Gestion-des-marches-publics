@@ -12,6 +12,7 @@ Application web interne pour une commune (~8 500 habitants) : suivi complet des 
 - **Avances** : taux, montant, date de versement, nombre d'échéances, remboursement suivi.
 - **Paiements** : situations et décomptes, cumul et reste à payer par marché.
 - **Reconductions** : reconductions d'un marché (numéro, période, montant, statut).
+- **Import PDF / Word** : création d'un marché à partir d'un document (PDF ou Word .docx) — avis d'attribution, arrêté, lettre de notification — avec lecture automatique du numéro, de l'objet, des montants, des dates, du type et du titulaire, puis vérification avant enregistrement. Le document est conservé dans la fiche du marché (téléchargeable).
 - **Authentification** : comptes utilisateurs avec rôles (administrateur / agent), mots de passe hachés, changement de mot de passe personnel.
 - **Export CSV** de la liste des marchés (compatible tableur).
 
@@ -43,13 +44,6 @@ app.run(host="0.0.0.0", port=5000)
 
 et accéder via `http://<adresse-du-poste>:5000`. Prévoir une sauvegarde régulière du fichier `marches.db` (simple copie du fichier). Changer la `secret_key` dans `app.py`.
 
-## Rôles
-
-| Rôle | Droits |
-|---|---|
-| **Agent** | Consulter, créer et modifier marchés, entreprises, retenues, avances, révisions, paiements, reconductions |
-| **Administrateur** | Tous les droits + suppressions + gestion des comptes utilisateurs |
-
 ## Évolutions prévues (développement progressif)
 
 L'architecture est modulaire pour grandir au fil des besoins :
@@ -61,12 +55,16 @@ L'architecture est modulaire pour grandir au fil des besoins :
 5. **Import DEPP / extraction BOAMP**, journal des modifications.
 6. **Hébergement sur le serveur de la commune** avec sauvegardes planifiées.
 
+## Importer un marché depuis un PDF ou un Word
+
+Menu « Importer » : choisissez un fichier `.pdf` ou `.docx` (par exemple l'avis d'attribution renvoyé signé, ou la lettre de notification). L'application extrait le texte, pré-remplit le formulaire (numéro type « 2025-… », objet, montant en €, dates jj/mm/aaaa, type de marché, SIRET du titulaire, durée en mois, indice de révision) et vous demande de vérifier avant de créer. Si le SIRET correspond à une entreprise déjà enregistrée, le titulaire est ajouté automatiquement. Le document d'origine reste attaché à la fiche du marché.
+
 ## Structure du code
 
 ```
 app.py               # routes Flask (une section par module métier)
 database.py          # schéma SQLite + données d'exemple
-templates/           # pages HTML (base, connexion, tableau de bord, marchés, entreprises, utilisateurs)
+templates/           # pages HTML (base, tableau de bord, marchés, entreprises)
 static/style.css     # feuille de style (sans dépendance externe)
 ```
 
