@@ -2,11 +2,29 @@
 {% block titre %}{{ 'Modifier' if marche else 'Nouveau' }} marché{% endblock %}
 {% block contenu %}
 <div class="page-head">
-  <h1>{{ 'Modifier le marché ' + marche.numero if marche else 'Nouveau marché' }}</h1>
+  <h1>{% if import_doc %}Vérifier le marché importé{% elif marche %}Modifier le marché {{ marche.numero }}{% else %}Nouveau marché{% endif %}</h1>
 </div>
+
+{% if import_doc %}
+<div class="flash flash-success">
+  Document <strong>{{ import_nom }}</strong> lu avec succès. Les champs ci-dessous sont pré-remplis automatiquement :
+  vérifiez-les et corrigez si besoin avant d'enregistrer.
+  {% if marche.entreprise %}<br>Entreprise détectée : <strong>{{ marche.entreprise }}</strong> — elle sera ajoutée automatiquement comme titulaire si elle est déjà enregistrée.{% endif %}
+</div>
+<details class="details-toggle" style="margin-bottom: 14px; background: #fff; border: 1px solid var(--bord); border-radius: 10px;">
+  <summary>Voir le texte extrait du document</summary>
+  <pre style="white-space: pre-wrap; padding: 0 18px 14px; font-size: .8rem; color: var(--gris);">{{ extraction }}</pre>
+</details>
+{% endif %}
 
 <div class="section">
   <form method="post" class="section-body">
+    {% if import_doc %}
+    <input type="hidden" name="etape" value="creation">
+    <input type="hidden" name="fichier_temp" value="{{ import_doc }}">
+    <input type="hidden" name="nom_fichier" value="{{ import_nom }}">
+    <input type="hidden" name="entreprise_suggeree" value="{{ marche.entreprise if marche else '' }}">
+    {% endif %}
     <div class="form-grille">
       <div class="champ">
         <label for="numero">Numéro du marché *</label>
@@ -95,8 +113,8 @@
       </div>
     </div>
     <div class="form-actions">
-      <button class="btn" type="submit">{{ 'Enregistrer les modifications' if marche else 'Créer le marché' }}</button>
-      <a class="btn btn-secondaire" href="{{ url_for('marche_detail', marche_id=marche.id) if marche else url_for('marches_liste') }}">Annuler</a>
+      <button class="btn" type="submit">{% if import_doc %}Créer le marché à partir de ce document{% elif marche %}Enregistrer les modifications{% else %}Créer le marché{% endif %}</button>
+      <a class="btn btn-secondaire" href="{{ url_for('marche_detail', marche_id=marche.id) if marche and marche.id else url_for('importer_document') if import_doc else url_for('marches_liste') }}">Annuler</a>
     </div>
   </form>
 </div>
