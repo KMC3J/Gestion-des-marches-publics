@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block titre %}Importer un marché{% endblock %}
+{% block contenu %}
+<div class="page-head">
+  <h1>Importer un marché (PDF ou Word)</h1>
+  <div class="actions">
+    <a class="btn btn-secondaire" href="{{ url_for('marches_liste') }}">Retour aux marchés</a>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Choisir un document</h2>
+  <div class="section-body">
+    <p>Chargez un document de marché au format <strong>PDF (.pdf)</strong> ou <strong>Word (.docx)</strong> — par exemple un avis d'attribution, un arrêté ou une lettre de notification. L'application lit le texte du document et pré-remplit automatiquement le formulaire du nouveau marché : numéro, objet, type, montants, dates, durée, titulaire éventuel.</p>
+    <p>Vous pourrez ensuite vérifier et corriger chaque champ avant de créer le marché. Le document d'origine sera conservé dans la fiche du marché.</p>
+    <form method="post" enctype="multipart/form-data" style="margin-top: 14px;">
+      <div class="champ">
+        <label for="document">Document du marché (PDF ou Word .docx)</label>
+        <input id="document" name="document" type="file" accept=".pdf,.docx" required>
+      </div>
+      <button class="btn" type="submit">Analyser le document</button>
+    </form>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Bon à savoir</h2>
+  <div class="section-body">
+    <ul>
+      <li>Les anciens fichiers Word <strong>.doc</strong> ne sont pas pris en charge : ouvrez-les dans Word et enregistrez-les en <strong>.docx</strong>.</li>
+      <li>Un PDF <strong>scanné</strong> (image sans texte) ne peut pas être lu : saisissez le marché manuellement.</li>
+      <li>Si le SIRET du titulaire figurant dans le document correspond à une entreprise déjà enregistrée, elle sera proposée automatiquement.</li>
+      <li>Rien n'est enregistré avant votre confirmation : vous validez toujours le formulaire après vérification.</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
